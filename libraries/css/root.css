@@ -1,0 +1,104 @@
+:root,
+body.light,
+body.dark {
+  /* === Brand / Accent (Pink) === */
+  --primary: #f6b8c3;
+  --on-primary: #2a0f16;
+  --primary-container: #3a1b23;
+  --on-primary-container: #ffdbe2;
+
+  --secondary: #e6a6b2;
+  --on-secondary: #2a0f16;
+  --secondary-container: #2f1a20;
+  --on-secondary-container: #f6c9d1;
+
+  --tertiary: #d89aa6;
+  --on-tertiary: #2a0f16;
+  --tertiary-container: #24161a;
+  --on-tertiary-container: #efc1cb;
+
+  /* === Error (Pink-red harmony) === */
+  --error: #ff7a8a;
+  --on-error: #2a0f16;
+  --error-container: #2a0f14;
+  --on-error-container: #ffb4bf;
+
+  /* === Background / Surface (AMOLED) === */
+  --background: #000000;
+  --on-background: #f2e6e9;
+
+  --surface: #0b0b0b;
+  --on-surface: #f2e6e9;
+
+  --surface-variant: #141214;
+  --on-surface-variant: #cbb5bb;
+
+  /* === Outlines === */
+  --outline: #3a2a2f;
+  --outline-variant: #24181c;
+
+  /* === Utility === */
+  --shadow: #000000;
+  --scrim: #000000;
+
+  --inverse-surface: #f2e6e9;
+  --inverse-on-surface: #1a0d11;
+  --inverse-primary: #7a3b47;
+
+  /* === Surface Elevations === */
+  --surface-dim: #000000;
+  --surface-bright: #1a1416;
+
+  --surface-container-lowest: #000000;
+  --surface-container-low: #0b0b0b;
+  --surface-container: #110e10;
+  --surface-container-high: #1a1416;
+  --surface-container-highest: #241a1d;
+}
+body {
+  background-image: url("../background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.swal2-popup {
+  font-family: inherit;
+  border-radius: var(--radius-large, 16px);
+  border: var(--outline);
+  background: var(--surface);
+  color: var(--on-surface);
+  box-shadow: var(--elevation-3);
+  /*stroke: #ffffff;
+  stroke-width: 5px; */
+}
+
+/* Title */
+.swal2-title {
+  font-weight: 500;
+}
+
+/* Text */
+.swal2-html-container {
+  color: var(--on-surface-variant);
+}
+
+/* Buttons */
+.swal2-confirm,
+.swal2-cancel {
+  border-radius: var(--radius-medium, 12px) !important;
+  padding: 0.6rem 1.4rem;
+  font-weight: 500;
+}
+
+/* Primary button (BeerCSS primary) */
+.swal2-confirm {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+
+/* Cancel button */
+.swal2-cancel {
+  background: var(--surface-variant) !important;
+  color: var(--on-surface) !important;
+}

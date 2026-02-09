@@ -1,0 +1,38 @@
+/* --- Global Soft Pink Theme Overrides --- */
+
+/* 1. Change the primary "brush" color and glow */
+#container netflixintro [class*=helper-] .effect-brush::before {
+  background-color: #f48fb1 !important; /* Soft Pink */
+  box-shadow: 0px 0px 29px 24px #f48fb1 !important;
+}
+
+/* 2. Update the "fur" texture gradients to match the pink theme */
+#container netflixintro [class*=helper-] .effect-brush [class*=fur-] {
+  /* This overrides the hard-coded red gradients from the original CSS */
+  background: linear-gradient(to bottom, #f48fb1 0%, #f48fb1 25%, rgba(0, 0, 0, 0) 100%) !important;
+}
+
+/* 3. Update the background fading animation of the letter stems */
+@-webkit-keyframes fading-lumieres-box {
+  0% { background-color: rgba(244, 143, 177, 0.5); }
+  100% { background-color: rgba(244, 143, 177, 0); }
+}
+
+@keyframes fading-lumieres-box {
+  0% { background-color: rgba(244, 143, 177, 0.5); }
+  100% { background-color: rgba(244, 143, 177, 0); }
+}
+
+/* 4. Update the light particles (lumieres) glow color */
+#container netflixintro [class*=helper-] .effect-lumieres [class*=lamp-] {
+  box-shadow: 0px 0px 10px 0px rgba(244, 143, 177, 0.75) !important;
+}
+
+#container netflixintro [class*=helper-] .effect-lumieres [class*=lamp-]::before {
+  box-shadow: 0px 0px 10px 0px rgba(244, 143, 177, 0.75) !important;
+}
+
+/* 5. Optional: Soften the background for a better pink aesthetic */
+#container {
+  background-color: #0f0508 !important; /* Deep dark plum instead of pure black */
+}

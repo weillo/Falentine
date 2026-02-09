@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--<link rel="shortcut icon" href="./assets/img/favicon.ico">-->
+    <title>Mail Viewer</title>
+    <link rel="icon" href="/assets/icon/icon.png" type="image/png">
+    <script type="module" crossorigin="" src="./js/app.min.js?v=1770298190010"></script>
+    <link rel="stylesheet" crossorigin="" href="./css/app.min.css?v=1770298190010">
+    
+    <!--custom meta tags-->
+    <meta name="description" content="kirim surat Valentine virtual">
+    <meta name="keywords" content="valentine, love, loveletter">
+    <meta name="author" content="Sanchex">
+
+    <!--open graph meta tags-->
+    <meta property="og:title" content="falentine" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="" />
+    <meta property="og:image" content="https://files.catbox.moe/dgjdmh.png" />
+    <meta property="og:description" content="kirim surat Valentine virtual" />
+
+    
+    <style>
+        .photo-error {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: white;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ff6b6b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 80%;
+        }
+    </style>
+    <base target="_blank">
+</head>
+
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div>Membuka surat rahasia...</div>
+    </div>
+
+    <div class="wrapper">
+        <header data-anim-header="" class="header">
+            <div class="header__container">
+                <!-- <include src="@components/layout/menu/menu.html" locals='{"active":"Home"}'></include> -->
+            </div>
+        </header>
+        <main class="page">
+            <div data-anim-index="" class="index index__container">
+                <!-- START -->
+                <section class="stage stage--start" id="startStage">
+                    <button class="heart-btn" id="openBtn">
+                        <div class="heart-btn__row">
+                            <img class="heart-btn__img" src="./assets/img/start.jpg" alt="">
+                            <div class="heart-btn__text">Click me</div>
+                        </div>
+                    </button>
+                </section>
+                <!-- SCROLL SCENE -->
+                <section class="stage stage--scroll" id="scrollStage" aria-hidden="true">
+                    <div class="fixed">
+                        <h1 class="hint">Scroll down😉</h1>
+                        <div class="envelope" id="env" style="--flap: 0;
+ --sealFade: 0;
+ --title: 0;
+ --p1: 0; --p2: 0; --p3: 0; --p4: 0; --p5: 0;">
+                            <!-- BACK -->
+                            <div class="env-glass env-glass--back"></div>
+                            <!-- FLAP -->
+                            <div class="env-flap"></div>
+                            <div class="valentine-title">Valentine for you</div>
+                            <!-- SHAFT -->
+                            <div class="letter">
+                                <div class="photos" id="photosContainer">
+                                    <img class="photo" id="photo1" src="./assets/img/p1.png" alt="">
+                                    <img class="photo" id="photo2" src="./assets/img/p2.png" alt="">
+                                    <img class="photo" id="photo3" src="./assets/img/p3.png" alt="">
+                                    <img class="photo" id="photo4" src="./assets/img/p4.png" alt="">
+                                    <img class="photo" id="photo5" src="./assets/img/main-pic.jpg" alt="">
+                                </div>
+                            </div>
+                            <!-- FRONT -->
+                            <div class="env-glass env-glass--front"></div>
+                            <!-- HEART SEAL -->
+                            <div class="seal" aria-hidden="true"></div>
+                        </div>
+                    </div>
+                    <div class="spacer"></div>
+                </section>
+            </div>
+        </main>
+        <footer data-anim-footer="" class="footer">
+            <div class="footer__container"></div>
+        </footer>
+    </div>
+
+    <script>
+        // ===========================
+        // Mail Viewer Decoder
+        // ===========================
+
+        const VARIATION_SELECTOR_START = 0xFE00;
+        const VARIATION_SELECTOR_END = 0xFE0F;
+        const VARIATION_SELECTOR_SUPPLEMENT_START = 0xE0100;
+        const VARIATION_SELECTOR_SUPPLEMENT_END = 0xE01EF;
+
+        function fromVariationSelector(codePoint) {
+            if (codePoint >= VARIATION_SELECTOR_START && codePoint <= VARIATION_SELECTOR_END) {
+                return codePoint - VARIATION_SELECTOR_START;
+            } else if (codePoint >= VARIATION_SELECTOR_SUPPLEMENT_START && codePoint <= VARIATION_SELECTOR_SUPPLEMENT_END) {
+                return codePoint - VARIATION_SELECTOR_SUPPLEMENT_START + 16;
+            }
+            return null;
+        }
+
+        function decodeMessage(text) {
+            const chars = Array.from(text);
+            const decodedBytes = [];
+            for (const ch of chars) {
+                const codePoint = ch.codePointAt(0);
+                const byte = fromVariationSelector(codePoint);
+                if (byte !== null) decodedBytes.push(byte);
+            }
+            if (decodedBytes.length === 0) return null;
+            return new TextDecoder().decode(new Uint8Array(decodedBytes));
+        }
+
+        function initMailViewer() {
+            const hash = window.location.hash;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+
+            // Check if we have data in hash (base64 encoded)
+            if (hash && hash.length > 1) {
+                try {
+                    const base64Data = hash.substring(1);
+                    const jsonStr = decodeURIComponent(escape(atob(base64Data)));
+                    const data = JSON.parse(jsonStr);
+
+                    if (data.images && Array.isArray(data.images)) {
+                        // Update photos with decoded URLs
+                        data.images.forEach((url, index) => {
+                            const photoEl = document.getElementById(`photo${index + 1}`);
+                            if (photoEl && url) {
+                                // Create new image to test loading
+                                const testImg = new Image();
+                                testImg.onload = function() {
+                                    photoEl.src = url;
+                                };
+                                testImg.onerror = function() {
+                                    console.warn(`Failed to load image ${index + 1}: ${url}`);
+                                    // Keep default or show error state
+                                    photoEl.classList.add('photo-error');
+                                    photoEl.alt = 'Image failed to load';
+                                };
+                                testImg.src = url;
+                            }
+                        });
+                    }
+
+                    // Hide loading after processing
+                    setTimeout(() => {
+                        loadingOverlay.style.display = 'none';
+                    }, 500);
+
+                } catch (e) {
+                    console.error('Failed to decode:', e);
+                    loadingOverlay.innerHTML = `
+        <div class="error-message">
+          <h3>❌ Gagal Membuka Surat</h3>
+          <p>Data tidak valid atau corrupted</p>
+          <button onclick="window.location.href='index.html'" style="margin-top: 1rem; padding: 0.5rem 1rem; border: none; background: white; color: #ff6b6b; border-radius: 5px; cursor: pointer;">
+            Kembali
+          </button>
+        </div>
+      `;
+                }
+            } else {
+                // No hash data, use defaults
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        // Also check for emoji in URL path (alternative method)
+        function checkPathEmoji() {
+            const path = window.location.pathname;
+            const match = path.match(/mailviewer\.html\/(.+)/);
+            if (match) {
+                const emojiData = decodeURIComponent(match[1]);
+                const decoded = decodeMessage(emojiData);
+                if (decoded) {
+                    try {
+                        const data = JSON.parse(decoded);
+                        if (data.images) {
+                            data.images.forEach((url, index) => {
+                                const photoEl = document.getElementById(`photo${index + 1}`);
+                                if (photoEl && url) photoEl.src = url;
+                            });
+                        }
+                    } catch (e) {
+                        console.error('Path decode error:', e);
+                    }
+                }
+            }
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', () => {
+            initMailViewer();
+            checkPathEmoji();
+        });
+    </script>
+    
+     <!--TIMER COUNTDOWN-->
+    <script>
+        (function() {
+            const CONFIG_URL = '/libraries/timer.json'; // path to your JSON file
+
+            fetch(CONFIG_URL)
+                .then(res => res.json())
+                .then(config => {
+                    // ====== SETTINGS FROM JSON ======
+                    const TARGET_DATE_TIME = config.targetDateTime;
+                    const PASSCODE = config.passcode;
+                    // =================================
+
+                    // Check for early access permission or expired countdown
+                    if (
+                        localStorage.getItem('countdown_early_access') === 'granted' ||
+                        new Date() >= new Date(TARGET_DATE_TIME)
+                    ) return;
+
+                    // Create overlay elements
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2147483647;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+      `;
+
+                    const countdownEl = document.createElement('div');
+                    countdownEl.style.cssText = `
+        font-size: clamp(2rem, 5vw, 4rem);
+        font-weight: 300;
+        letter-spacing: -0.05em;
+        cursor: default;
+        user-select: none;
+        max-width: 100%;
+        line-height: 1.2;
+      `;
+                    countdownEl.textContent = '00:00:00';
+
+                    overlay.appendChild(countdownEl);
+                    document.body.appendChild(overlay);
+
+                    // Triple-click handler for passcode prompt
+                    let clickCount = 0;
+                    let clickTimer = null;
+
+                    countdownEl.addEventListener('click', () => {
+                        clickCount++;
+
+                        if (clickCount === 3) {
+                            const userInput = prompt('Enter early access passcode:');
+                            if (userInput === PASSCODE) {
+                                localStorage.setItem('countdown_early_access', 'granted');
+                                overlay.remove();
+                                if (window.countdownInterval) clearInterval(window.countdownInterval);
+                            }
+                            clickCount = 0;
+                            if (clickTimer) clearTimeout(clickTimer);
+                        } else {
+                            if (clickTimer) clearTimeout(clickTimer);
+                            clickTimer = setTimeout(() => {
+                                clickCount = 0;
+                            }, 300);
+                        }
+                    });
+
+                    // Countdown logic
+                    const updateCountdown = () => {
+                        const now = Date.now();
+                        const distance = new Date(TARGET_DATE_TIME).getTime() - now;
+
+                        if (distance <= 0) {
+                            overlay.style.visibility = 'hidden';
+                            localStorage.removeItem('countdown_early_access');
+                            window.location.reload();
+                            return;
+                        }
+
+                        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                        if (days > 0) {
+                            countdownEl.textContent =
+                                `${days}d ${hours.toString().padStart(2, '0')}:` +
+                                `${minutes.toString().padStart(2, '0')}:` +
+                                `${seconds.toString().padStart(2, '0')}`;
+                        } else if (hours > 0) {
+                            countdownEl.textContent =
+                                `${hours}h ${minutes.toString().padStart(2, '0')}:` +
+                                `${seconds.toString().padStart(2, '0')}`;
+                        } else {
+                            countdownEl.textContent =
+                                `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+                        }
+                    };
+
+                    updateCountdown();
+                    window.countdownInterval = setInterval(updateCountdown, 1000);
+                })
+                .catch(err => {
+                    console.error('Failed to load countdown config:', err);
+                });
+        })();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Valentine's Day card</title>
+    <link rel="icon" href="/assets/icon/icon.png" type="image/png">
+    
+    <!--custom meta tags-->
+    <meta name="description" content="kirim surat Valentine virtual">
+    <meta name="keywords" content="valentine, love, loveletter">
+    <meta name="author" content="Sanchex">
+
+    <!--open graph meta tags-->
+    <meta property="og:title" content="falentine" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="" />
+    <meta property="og:image" content="https://files.catbox.moe/dgjdmh.png" />
+    <meta property="og:description" content="kirim surat Valentine virtual" />
+
+    
+    <link
+      href="https://fonts.googleapis.com/css2?family=Annie+Use+Your+Telescope&family=Petemoss&family=Roboto:ital,wght@0,100..900;1,100..900&family=Shantell+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/styleMAV.css" />
+    <style>
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 182, 193, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: #d32f2f;
+        font-family: 'Shantell Sans', cursive;
+      }
+      .loading-spinner {
+        width: 50px;
+        height: 50px;
+        border: 3px solid rgba(211, 47, 47, 0.3);
+        border-top-color: #d32f2f;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .error-message {
+        background: #ff6b6b;
+        color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 80%;
+        font-family: 'Roboto', sans-serif;
+      }
+      .card-body p {
+        transition: all 0.3s ease;
+      }
+    </style>
+  <base target="_blank">
+</head>
+  <body>
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <div>Membuka surat cinta...</div>
+    </div>
+
+    <div class="envelope">
+      <div class="envelope-lid"></div>
+      <div class="envelope-lid envelope-lid-secondary"></div>
+      <div class="card-wrapper">
+        <div class="card">
+          <div class="card-cover">
+            <div class="card-side card-side-primary">
+              <h1 class="card-title">
+                <span class="card-title-secondary">Happy</span>
+                <span class="card-title-main"
+                  >Valentine
+                  <span class="card-title-apostrophe">❤️</span>s</span
+                >
+                <span class="card-title-secondary">Day</span>
+              </h1>
+            </div>
+            <div class="card-side card-side-secondary"></div>
+          </div>
+          <div class="card-body">
+            <p id="foruser">[input-foruser]</p>
+            <p id="message">
+              [input-message]
+            </p>
+            <p id="sendfrom">[input-sendfrom]</p>
+          </div>
+        </div>
+      </div>
+      <div class="heart-seal"></div>
+    </div>
+
+    <script src="./js/scriptMAV.js"></script>
+    <script>
+      // ===========================
+      // Mail MAV Decoder
+      // ===========================
+
+      const VARIATION_SELECTOR_START = 0xFE00;
+      const VARIATION_SELECTOR_END = 0xFE0F;
+      const VARIATION_SELECTOR_SUPPLEMENT_START = 0xE0100;
+      const VARIATION_SELECTOR_SUPPLEMENT_END = 0xE01EF;
+
+      function fromVariationSelector(codePoint) {
+        if (codePoint >= VARIATION_SELECTOR_START && codePoint <= VARIATION_SELECTOR_END) {
+          return codePoint - VARIATION_SELECTOR_START;
+        } else if (codePoint >= VARIATION_SELECTOR_SUPPLEMENT_START && codePoint <= VARIATION_SELECTOR_SUPPLEMENT_END) {
+          return codePoint - VARIATION_SELECTOR_SUPPLEMENT_START + 16;
+        }
+        return null;
+      }
+
+      function decodeMessage(text) {
+        const chars = Array.from(text);
+        const decodedBytes = [];
+        for (const ch of chars) {
+          const codePoint = ch.codePointAt(0);
+          const byte = fromVariationSelector(codePoint);
+          if (byte !== null) decodedBytes.push(byte);
+        }
+        if (decodedBytes.length === 0) return null;
+        return new TextDecoder().decode(new Uint8Array(decodedBytes));
+      }
+
+      function initMailMAV() {
+        const hash = window.location.hash;
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Check if we have data in hash (base64 encoded)
+        if (hash && hash.length > 1) {
+          try {
+            const base64Data = hash.substring(1);
+            const jsonStr = decodeURIComponent(escape(atob(base64Data)));
+            const data = JSON.parse(jsonStr);
+
+            if (data.type === "message") {
+              // Update the card content
+              if (data.foruser) {
+                document.getElementById('foruser').textContent = data.foruser;
+              }
+              if (data.message) {
+                document.getElementById('message').textContent = data.message;
+              }
+              if (data.sendfrom) {
+                document.getElementById('sendfrom').textContent = `From: ${data.sendfrom}`;
+              }
+            } else {
+              throw new Error("Invalid data type");
+            }
+
+            // Hide loading after processing
+            setTimeout(() => {
+              loadingOverlay.style.display = 'none';
+            }, 800);
+
+          } catch (e) {
+            console.error('Failed to decode:', e);
+            loadingOverlay.innerHTML = `
+              <div class="error-message">
+                <h3>❌ Gagal Membuka Surat</h3>
+                <p>Data tidak valid atau corrupted</p>
+                <button onclick="window.location.href='main.html'" style="margin-top: 1rem; padding: 0.5rem 1rem; border: none; background: white; color: #ff6b6b; border-radius: 5px; cursor: pointer;">
+                  Kembali
+                </button>
+              </div>
+            `;
+          }
+        } else {
+          // No hash data, use defaults and hide loading
+          setTimeout(() => {
+            loadingOverlay.style.display = 'none';
+          }, 500);
+        }
+      }
+
+      // Also check for emoji in URL path (alternative method)
+      function checkPathEmoji() {
+        const path = window.location.pathname;
+        const match = path.match(/mailMAV\.html\/(.+)/);
+        if (match) {
+          const emojiData = decodeURIComponent(match[1]);
+          const decoded = decodeMessage(emojiData);
+          if (decoded) {
+            try {
+              const data = JSON.parse(decoded);
+              if (data.type === "message") {
+                if (data.foruser) document.getElementById('foruser').textContent = data.foruser;
+                if (data.message) document.getElementById('message').textContent = data.message;
+                if (data.sendfrom) document.getElementById('sendfrom').textContent = `From: ${data.sendfrom}`;
+              }
+            } catch (e) {
+              console.error('Path decode error:', e);
+            }
+          }
+        }
+      }
+
+      // Initialize on load
+      document.addEventListener('DOMContentLoaded', () => {
+        initMailMAV();
+        checkPathEmoji();
+      });
+    </script>
+    
+    <!--TIMER COUNTDOWN-->
+    <script>
+        (function() {
+            const CONFIG_URL = 'libraries/timer.json'; // path to your JSON file
+
+            fetch(CONFIG_URL)
+                .then(res => res.json())
+                .then(config => {
+                    // ====== SETTINGS FROM JSON ======
+                    const TARGET_DATE_TIME = config.targetDateTime;
+                    const PASSCODE = config.passcode;
+                    // =================================
+
+                    // Check for early access permission or expired countdown
+                    if (
+                        localStorage.getItem('countdown_early_access') === 'granted' ||
+                        new Date() >= new Date(TARGET_DATE_TIME)
+                    ) return;
+
+                    // Create overlay elements
+                    const overlay = document.createElement('div');
+                    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: black;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 2147483647;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        text-align: center;
+        padding: 20px;
+        box-sizing: border-box;
+      `;
+
+                    const countdownEl = document.createElement('div');
+                    countdownEl.style.cssText = `
+        font-size: clamp(2rem, 5vw, 4rem);
+        font-weight: 300;
+        letter-spacing: -0.05em;
+        cursor: default;
+        user-select: none;
+        max-width: 100%;
+        line-height: 1.2;
+      `;
+                    countdownEl.textContent = '00:00:00';
+
+                    overlay.appendChild(countdownEl);
+                    document.body.appendChild(overlay);
+
+                    // Triple-click handler for passcode prompt
+                    let clickCount = 0;
+                    let clickTimer = null;
+
+                    countdownEl.addEventListener('click', () => {
+                        clickCount++;
+
+                        if (clickCount === 3) {
+                            const userInput = prompt('Enter early access passcode:');
+                            if (userInput === PASSCODE) {
+                                localStorage.setItem('countdown_early_access', 'granted');
+                                overlay.remove();
+                                if (window.countdownInterval) clearInterval(window.countdownInterval);
+                            }
+                            clickCount = 0;
+                            if (clickTimer) clearTimeout(clickTimer);
+                        } else {
+                            if (clickTimer) clearTimeout(clickTimer);
+                            clickTimer = setTimeout(() => {
+                                clickCount = 0;
+                            }, 300);
+                        }
+                    });
+
+                    // Countdown logic
+                    const updateCountdown = () => {
+                        const now = Date.now();
+                        const distance = new Date(TARGET_DATE_TIME).getTime() - now;
+
+                        if (distance <= 0) {
+                            overlay.style.visibility = 'hidden';
+                            localStorage.removeItem('countdown_early_access');
+                            window.location.reload();
+                            return;
+                        }
+
+                        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                        if (days > 0) {
+                            countdownEl.textContent =
+                                `${days}d ${hours.toString().padStart(2, '0')}:` +
+                                `${minutes.toString().padStart(2, '0')}:` +
+                                `${seconds.toString().padStart(2, '0')}`;
+                        } else if (hours > 0) {
+                            countdownEl.textContent =
+                                `${hours}h ${minutes.toString().padStart(2, '0')}:` +
+                                `${seconds.toString().padStart(2, '0')}`;
+                        } else {
+                            countdownEl.textContent =
+                                `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+                        }
+                    };
+
+                    updateCountdown();
+                    window.countdownInterval = setInterval(updateCountdown, 1000);
+                })
+                .catch(err => {
+                    console.error('Failed to load countdown config:', err);
+                });
+        })();
+    </script>
+  </body>
+</html>
