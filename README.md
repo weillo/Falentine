@@ -6,6 +6,8 @@ The emoji looks normal, but it secretly contains data that can be decoded by thi
 
 This works entirely on the **client side (HTML + JS)** — no backend required.
 
+you can view this demo at [this)](https://falentine-theta.vercel.app)
+
 ---
 
 ## ✨ Features
